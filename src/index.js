@@ -35,6 +35,7 @@ Rx.from(dirs)
       fileObjects.reduce((acc, fileObject) => acc.concat(fileObject), []),
     ),
     mergeMap(fileObject =>
+      // @ts-ignore
       readFileAsObservable(
         path.join(fileObject.dirName, fileObject.fileName),
         "utf-8",

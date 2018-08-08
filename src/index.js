@@ -10,12 +10,14 @@ const { unparse: jsonToCSV } = require("papaparse")
 
 const parseStarHeader = require("./parse-star-header")
 
-const { SRC_DIRS } = process.env
+const { SRC_DIRS, DST } = process.env
 
 const dirs = SRC_DIRS.split(";")
 
 const readDirAsObservable = Rx.bindNodeCallback(fs.readdir)
 const readFileAsObservable = Rx.bindNodeCallback(fs.readFile)
+
+console.log(`Processing STAR directories: ${dirs.join("; ")}`)
 
 Rx.from(dirs)
   .pipe(
@@ -43,4 +45,16 @@ Rx.from(dirs)
     ),
     toArray(),
   )
-  .subscribe(json => console.log(jsonToCSV(json)))
+  .subscribe(json => {
+    const csv = jsonToCSV(json)
+
+    console.log(`Writing to ${DST}`)
+
+    fs.writeFile(DST, csv, error => {
+      if (error) {
+        console.log(`Error: ${error}`)
+      } else {
+        console.log("Done")
+      }
+    })
+  })

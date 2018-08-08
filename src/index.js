@@ -3,18 +3,21 @@
 require("dotenv").config()
 
 const Rx = require("rxjs")
-const { map, mergeMap } = require("rxjs/operators")
+const { map, mergeMap, toArray } = require("rxjs/operators")
 const fs = require("fs")
 const path = require("path")
+const { unparse: jsonToCSV } = require("papaparse")
 
 const parseStarHeader = require("./parse-star-header")
 
-const { SRC_DIRS } = process.env
+const { SRC_DIRS, DST } = process.env
 
 const dirs = SRC_DIRS.split(";")
 
 const readDirAsObservable = Rx.bindNodeCallback(fs.readdir)
 const readFileAsObservable = Rx.bindNodeCallback(fs.readFile)
+
+console.log(`Processing STAR directories: ${dirs.join("; ")}`)
 
 Rx.from(dirs)
   .pipe(
@@ -40,5 +43,18 @@ Rx.from(dirs)
         map(content => ({ ...fileObject, ...content })),
       ),
     ),
+    toArray(),
   )
-  .subscribe(console.log)
+  .subscribe(json => {
+    const csv = jsonToCSV(json)
+
+    console.log(`Writing to ${DST}`)
+
+    fs.writeFile(DST, csv, error => {
+      if (error) {
+        console.log(`Error: ${error}`)
+      } else {
+        console.log("Done")
+      }
+    })
+  })

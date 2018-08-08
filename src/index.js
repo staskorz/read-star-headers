@@ -3,9 +3,10 @@
 require("dotenv").config()
 
 const Rx = require("rxjs")
-const { map, mergeMap } = require("rxjs/operators")
+const { map, mergeMap, toArray } = require("rxjs/operators")
 const fs = require("fs")
 const path = require("path")
+const { unparse: jsonToCSV } = require("papaparse")
 
 const parseStarHeader = require("./parse-star-header")
 
@@ -40,5 +41,6 @@ Rx.from(dirs)
         map(content => ({ ...fileObject, ...content })),
       ),
     ),
+    toArray(),
   )
-  .subscribe(console.log)
+  .subscribe(json => console.log(jsonToCSV(json)))
